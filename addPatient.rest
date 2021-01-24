@@ -1,0 +1,10 @@
+POST http://localhost:3001/api/patients
+Content-Type: application/json
+
+{
+	"name": "Lily Wong",
+	"dateOfBirth": "1990-12-23",
+	"gender": "trans",
+	"occupation": "Developer",
+	"ssn": "231290-4567"
+}
