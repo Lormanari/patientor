@@ -6,16 +6,55 @@ export interface diagnoseEntry {
 export enum Gender {
 	Male = 'male',
 	Female = 'female',
-	Trans = 'trans',
-	Neutral = 'neutral',
-	NonBinary = 'non-binary',
-	Agender = 'agender',
-	Pangender = 'pangender',
-	Genderqueer = 'genderqueer',
-	TwoSpirit = 'two-spirit',
-	ThridGender = 'third-gender',
 	Others = 'others'
 }
+
+export interface BaseEntry {
+	id: string;
+	description: string;
+	date: string;
+	specialist: string;
+	diagnosisCodes?: Array<diagnoseEntry['code']>;
+}
+
+export enum HealthCheckRating {
+	"Healthy" = 0,
+	"LowRisk" = 1,
+	"HighRisk" = 2,
+	"CriticalRisk" = 3
+}
+
+export enum Hospital {
+	HealthCheck = 'HealthCheck',
+	Hospital = 'Hospital',
+	OccupationalHealthcare = 'OccupationalHealthcare'
+}
+
+export interface HealthCheckEntry extends BaseEntry {
+	type: Hospital.HealthCheck;
+	healthCheckRating: HealthCheckRating;
+}
+
+interface HospitalEntry extends BaseEntry {
+	type: Hospital.Hospital;
+	discharge: {
+		date: string;
+		criteria: string;
+	};
+}
+interface OccupationalHealthcareEntry extends BaseEntry {
+	type: Hospital.OccupationalHealthcare;
+	employerName: string;
+	sickLeave?: {
+		startDate: string;
+		endDate: string;
+	}
+}
+
+export type Entry =
+  | HospitalEntry
+  | OccupationalHealthcareEntry
+  | HealthCheckEntry;
 
 export interface patientEntry {
 	id: string;
@@ -24,10 +63,18 @@ export interface patientEntry {
 	ssn: string;
 	gender: Gender;
 	occupation: string;
+	entries: Entry[]
 }
 
+export type NewBase = Omit<BaseEntry, 'id'>;
+export type NewHospitalEntry = Omit<HospitalEntry, 'id' | 'type'>;
+export type NewOccupationalHealthcareEntry = Omit<OccupationalHealthcareEntry, 'id' | 'type'>;
+export type NewHealthCheckEntry = Omit<HealthCheckEntry, 'id' | 'type'>;
 
+export type NonSensitivePatientEntry = Omit<patientEntry, 'ssn' | 'entries'>;
 
-export type NonSensitivePatientEntry = Omit<patientEntry, 'ssn'>;
-
-export type NewPatientEntry = Omit<patientEntry, 'id'>;
+export type NewPatientEntry = Omit<patientEntry, 'id' | 'entries'>;
+export type NewEntry =
+	| Omit<HealthCheckEntry, 'id'>
+	| Omit<OccupationalHealthcareEntry, 'id'>
+	| Omit<HospitalEntry, 'id'>;

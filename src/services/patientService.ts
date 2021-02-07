@@ -1,8 +1,8 @@
 import patients from '../../data/patients';
-import { NonSensitivePatientEntry, patientEntry, NewPatientEntry } from '../types';
+import { NonSensitivePatientEntry, patientEntry, NewPatientEntry, Entry, NewEntry } from '../types';
 import uniqid from "uniqid";
 
-const getEntries = (): patientEntry[] => {
+const getPatients = (): patientEntry[] => {
   return patients;
 };
 
@@ -16,20 +16,35 @@ const getNonSensitiveEntries = (): NonSensitivePatientEntry[] => {
 }));
 };
 
-const addPatient = (entry: NewPatientEntry): patientEntry => {
+const getPatientById = (id: string):patientEntry | undefined=> {
+	return patients.find(p => p.id === id);
+};
 
+const addPatient = (entry: NewPatientEntry): patientEntry => {
 	const NewPatientEntry = {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		id: String(uniqid()),
-		...entry
+		...entry,
+		entries: [],
 	};
 
 	patients.push(NewPatientEntry);
 	return NewPatientEntry;
 };
 
+const addEntry = (data: NewEntry, entries: NewEntry[]): Entry => {
+	const NewData = {
+		id: String(uniqid()),
+		...data
+	};
+	entries.push(NewData);
+	return NewData;
+};
+
 export default {
-  getEntries,
+  getPatients,
   getNonSensitiveEntries,
-  addPatient
+  addPatient,
+  getPatientById,
+  addEntry
 };

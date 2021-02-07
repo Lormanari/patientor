@@ -1,8 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NewPatientEntry, Gender } from './types';
+import {
+	NewPatientEntry,
+	Gender,
+	NewBase,
+	HealthCheckRating,
+	NewHealthCheckEntry,
+	NewHospitalEntry,
+	NewOccupationalHealthcareEntry,
+	Hospital,
+	NewEntry } from './types';
 
 const parseString = (propertyValue: any, propertyName: any): string => {
 	if (!propertyValue || !isString(propertyValue)) {
@@ -37,6 +48,39 @@ const parseGender = (gender: any): Gender => {
 	return gender;
 };
 
+const isRate = (param: any): param is HealthCheckRating => {
+	return Object.values(HealthCheckRating).includes(param);
+};
+
+const parseRate = (rate: any): HealthCheckRating => {
+	if (!isRate(rate)) {
+		throw new Error(`Incorrect or missing Health check rate: ${rate}`);
+	}
+	return rate;
+};
+
+// const isHospital = (param: any): param is Hospital => {
+// 	return Object.values(Hospital).includes(param);
+// };
+
+// const parseHospital = (hospital: any): Hospital => {
+// 	if (!hospital || !isHospital(hospital)) {
+// 		throw new Error(`Incorrect or missing hospital type: ${hospital}`);
+// 	}
+// 	return hospital;
+// };
+
+// const isType = (param: NewHealthCheckEntry, type: Hospital): param is NewHealthCheckEntry => {
+// 	return param.type === type;
+// };
+
+// const parseType = (hospitalType: any, type: Hospital): NewHealthCheckEntry => {
+// 	if (!hospitalType || !isType(hospitalType, type)) {
+// 		throw new Error(`Incorrect or missing type: ${hospitalType}`);
+// 	}
+// 	return hospitalType;
+// };
+
 const toNewPatientEntry = (object: any): NewPatientEntry => { /* eslint-disable @typescript-eslint/no-explicit-any */
 	return {
 		name: parseString(object.name, "name"),
@@ -46,5 +90,74 @@ const toNewPatientEntry = (object: any): NewPatientEntry => { /* eslint-disable 
 		occupation: parseString(object.occupation, "occupation"),
 	};
 };
+const toNewBaseEntry = (object: any): NewBase => { /* eslint-disable @typescript-eslint/no-explicit-any */
+	return {
+		description: parseString(object.description, "description"),
+		date: parseDate(object.date),
+		specialist: parseString(object.specialist, "specialist"),
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		diagnosisCodes: object.diagnosisCodes.map((code: any) => parseString(code, "diagnosisCode"))
+	};
+};
+const toNewHealthCheckEntry = (object: any): NewHealthCheckEntry => {
+	return {
+		...toNewBaseEntry(object),
+		healthCheckRating: parseRate(object.healthCheckRating),
+		// type: parseHospital(object.type),
+	};
+};
+const toNewHospitalEntry = (object: any): NewHospitalEntry => {
+	return {
+		...toNewBaseEntry(object),
+		discharge: {
+			date: parseDate(object.discharge.date),
+			criteria: parseString(object.discharge.criteria, "discharge criteria")
+		}
+		// type: parseHospital(object.type),
+	};
+};
 
-export default toNewPatientEntry;
+const toNewOccupationalHealthcareEntry = (object: any): NewOccupationalHealthcareEntry => {
+	const sickLeave = object.sickLeave && {
+		startDate: parseDate(object.sickLeave.startDate),
+		endDate: parseDate(object.sickLeave.endDate)
+	};
+
+	return {
+		...toNewBaseEntry(object),
+		// type: parseHospital(object.type),
+		employerName: parseString(object.employerName, "employerName"),
+		sickLeave,
+	};
+};
+const assertNever = (value: any): never => {
+	throw new Error(
+		`Unhandled discriminated union member: ${JSON.stringify(value)}`
+	);
+};
+const toNewEntry = (object: any): NewEntry => {
+	switch(object.type){
+		case Hospital.HealthCheck: {
+			return {
+				...toNewHealthCheckEntry(object),
+				type: Hospital.HealthCheck
+			};
+		}
+		case Hospital.Hospital: {
+			return {
+				...toNewHospitalEntry(object),
+				type: Hospital.Hospital
+			};
+		}
+		case Hospital.OccupationalHealthcare: {
+			return {
+				...toNewOccupationalHealthcareEntry(object),
+				type: Hospital.OccupationalHealthcare
+			};
+		}
+		default:
+			return assertNever(object);
+	}
+};
+
+export default { toNewPatientEntry, toNewEntry};

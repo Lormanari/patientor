@@ -4,7 +4,7 @@ Content-Type: application/json
 {
 	"name": "Lily Wong",
 	"dateOfBirth": "1990-12-23",
-	"gender": "trans",
+	"gender": "male",
 	"occupation": "Developer",
 	"ssn": "231290-4567"
 }
